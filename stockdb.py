@@ -34,6 +34,11 @@ def initDB(db_name="db.db"):
                 "\"volume\"	REAL NOT NULL,"+
                 "PRIMARY KEY(\"stockname\",\"date\")"+
                 ");")
+        cursor.execute("CREATE TABLE \"StockList\" ("+
+	            "\"ID\"	TEXT NOT NULL,"+
+	            "\"Name\"	TEXT NOT NULL,"+
+	            "PRIMARY KEY(\"ID\")"+
+                ");")
         conn.commit()
         cursor.close()
         conn.close()
@@ -70,9 +75,9 @@ def insertDayKDataToDb(db="db.db",dayklist=[]):
     return True
 
 
-## 获得股票列表
+## 从网络获得股票列表
 
-def getStockList():
+def getStockListFromWeb():
     try:
         print("%s\t开始抓取股票清单......"%datetime.datetime.now().strftime("%H:%M:%S"))
         stock_info_list = ak.stock_info_a_code_name()
@@ -83,7 +88,54 @@ def getStockList():
         print("%s\t抓取股票清单失败！"%datetime.datetime.now().strftime("%H:%M:%S"))
         
         
-        
+ ## 从数据库中获得股票列表
+
+def getStockListFromDB(db="db.db"):
+
+    try:
+        conn = sqlite3.connect(db) 
+        cursor=  conn.cursor()
+        try:
+            cursor.execute("select * from StockList")
+            sl = cursor.fetchall()
+            return sl
+        except Exception as e1:
+            print(str(e))
+        finally:
+            cursor.close()
+            conn.close()
+            return []
+    except Exception as e :
+        print(str(e))
+        return []
+
+## 更新数据库中的股票列表
+
+def updateStockListIntoDB(db="db.db",stocklist=[]):
+    try:
+        conn = sqlite3.connect(db) 
+        cursor=  conn.cursor()
+        try:
+            try:
+                cursor.execute("delete from StockList")
+            except Exception as e1:
+                conn.rollback()
+                print(str(e))
+            try:
+                cursor.executemany("insert into StockList values(?,?)",stocklist)
+                conn.commit()
+            except Exception as e1:
+                print(str(e1))
+        except Exception as e2:
+            print(str(e2))
+        finally:
+            cursor.close()
+            conn.close()
+            return []
+    except Exception as e :
+        print(str(e))
+        return []        
+
         
 ## 抓取指定股票在指定日期的数据
 ## 如果抓取到了，返回相应数据列表
@@ -117,3 +169,21 @@ def getDayK(stock_code,start_date=datetime.datetime.now().strftime("%Y%m%d"), en
         return None
 
     return None
+
+## 获取数据库中股票的最近日期
+
+def getStockLatestInfo():
+    try:
+        conn = sqlite3.connect(db) 
+        cursor=  conn.cursor()
+        try:
+            pass
+        except Exception as e2:
+            print(str(e2))
+        finally:
+            cursor.close()
+            conn.close()
+            return []
+    except Exception as e :
+        print(str(e))
+        return []  
